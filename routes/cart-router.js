@@ -55,6 +55,16 @@ router.route("/")
 // })
 
 router.route("/:productId")
+  .delete(async (req, res) => {
+    try{
+      const productId=req.params.productId;
+      await CartItem.findOneAndDelete({product:productId});
+      res.status(200).json({ success: true });
+    }
+    catch(error){
+      res.status(500).json({ success: false, errorMessage: error.message })
+    }
+  })
   // .post(async (req, res) => {
   //   try {
   //     const productId = req.params.productId;
@@ -68,15 +78,6 @@ router.route("/:productId")
   //     res.status(500).json({ success: false, errorMessage: error.message })
   //   }
   // })
-  .delete(async (req, res) => {
-    try{
-      const productId=req.params.productId;
-      await CartItem.findOneAndDelete({product:productId});
-      res.status(200).json({ success: true });
-    }
-    catch(error){
-      res.status(500).json({ success: false, errorMessage: error.message })
-    }
-  })
+  
 
 module.exports = router; 
