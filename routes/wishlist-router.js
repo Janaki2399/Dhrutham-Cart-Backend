@@ -27,8 +27,9 @@ router.route("/")
       }
 
       const wishlistItem = new WishlistItem(product);
-      await wishlistItem.save();
-      res.json({ wishlistItem, success: true })
+      const insertedItem=await wishlistItem.save();
+      const populatedItem=await insertedItem.populate("product").execPopulate();
+      res.json({ wishlistItem:populatedItem, success: true })
     }
     catch (error) {
       res.status(500).json({
