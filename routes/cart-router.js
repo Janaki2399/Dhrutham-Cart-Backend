@@ -72,7 +72,7 @@ router.route("/:cartId")
     try{
       const productId=req.params.productId;
       await CartItem.findOneAndDelete({product:productId});
-      res.status(200).json({ cartItem, success: true });
+      res.status(200).json({ success: true });
     }
     catch(error){
       res.status(500).json({ success: false, errorMessage: error.message })
