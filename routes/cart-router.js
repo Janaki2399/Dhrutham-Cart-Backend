@@ -65,19 +65,20 @@ router.route("/:productId")
       res.status(500).json({ success: false, errorMessage: error.message })
     }
   })
-  // .post(async (req, res) => {
-  //   try {
-  //     const productId = req.params.productId;
-  //     const cartItem = await CartItem.findById(cartId);
-  //     const updateProperty = req.body;
-  //     const updatedCartItem = extend(cartItem, updateProperty);
-  //     const newCartItem = await updatedCartItem.save();
-  //     res.status(200).json({ newCartItem, success: true });
-  //   }
-  //   catch (error) {
-  //     res.status(500).json({ success: false, errorMessage: error.message })
-  //   }
-  // })
+  router.route("/:cartId")
+  .post(async (req, res) => {
+    try {
+      const cartId = req.params.cartId;
+      const cartItem = await CartItem.findById(cartId);
+      const updateProperty = req.body;
+      const updatedCartItem = extend(cartItem, updateProperty);
+      const newCartItem = await updatedCartItem.save();
+      res.status(200).json({ newCartItem, success: true });
+    }
+    catch (error) {
+      res.status(500).json({ success: false, errorMessage: error.message })
+    }
+  })
   
 
 module.exports = router; 
