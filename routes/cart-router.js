@@ -40,24 +40,25 @@ router.route("/")
     }
   })
 
-router.param("cartId", async (req, res, next, cartId) => {
-  try {
-    const cartItem = await CartItem.findById(cartId);
-    if (!cartItem) {
-      return res.status(400).json({ success: false, errorMessage: "could not fetch the cartItem" })
-    }
-    req.cartItem = cartItem;
-    next();
-  }
-  catch (error) {
-    res.status(500).json({ success: false, errorMessage: error.message })
-  }
-})
+// router.param("cartId", async (req, res, next, cartId) => {
+//   try {
+//     const cartItem = await CartItem.findById(cartId);
+//     if (!cartItem) {
+//       return res.status(400).json({ success: false, errorMessage: "could not fetch the cartItem" })
+//     }
+//     req.cartItem = cartItem;
+//     next();
+//   }
+//   catch (error) {
+//     res.status(500).json({ success: false, errorMessage: error.message })
+//   }
+// })
 
 router.route("/:cartId")
   .post(async (req, res) => {
     try {
-      const { cartItem } = req;
+      const cartId = req.params.cartId;
+      const cartItem = await CartItem.findById(cartId);
       const updateProperty = req.body;
       const updatedCartItem = extend(cartItem, updateProperty);
       const newCartItem = await updatedCartItem.save();
@@ -69,8 +70,8 @@ router.route("/:cartId")
   })
   .delete(async (req, res) => {
     try{
-      const { cartItem } = req;
-      await cartItem.remove();
+      const productId=req.params.productId;
+      await CartItem.findOneAndDelete({product:productId});
       res.status(200).json({ cartItem, success: true });
     }
     catch(error){
