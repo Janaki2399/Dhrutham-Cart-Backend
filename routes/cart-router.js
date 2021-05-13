@@ -28,8 +28,9 @@ router.route("/")
         return res.status(409).json({ success: false, message: "item already exists" });
       }
       const cartItem = new CartItem(product);
-      await cartItem.save();
-      res.json({ cartItem, success: true })
+      const insertedItem=await cartItem.save();
+      const populatedItem=await insertedItem.populate("product").execPopulate();
+      res.json({ cartItem:populatedItem, success: true })
     }
     catch (error) {
       res.status(500).json({
