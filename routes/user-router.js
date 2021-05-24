@@ -15,8 +15,8 @@ router.post("/signup", async (req, res) => {
   const user = new User(body);
   const salt = await bcrypt.genSalt(10);
   user.password = await bcrypt.hash(user.password, salt);
-  const userDocument = await user.save();
-  res.status(200).json({ userDocument });
+  await user.save();
+  res.status(200).json({ success: true });
 });
 
 router.post("/login", async (req, res) => {
