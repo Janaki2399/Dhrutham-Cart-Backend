@@ -2,16 +2,19 @@ const express = require("express");
 const jwt = require("jsonwebtoken");
 const router = express.Router();
 const _ = require("lodash");
-const { WishlistItem } = require("../models/wishlist.model");
+const { Wishlist } = require("../models/wishlist.model");
 
 router.use(async (req, res, next) => {
   const token = req.headers.authorization.split(" ")[1];
+  // console.log("wishlit :" + token);
   try {
     const decoded = jwt.verify(token, process.env.secret);
     req.user = { userId: decoded.userId };
     next();
   } catch (error) {
-    res.json({ success: false, errorMessage: "Unauthorized access" });
+    res
+      .status(401)
+      .json({ success: false, errorMessage: "Unauthorized access" });
   }
 });
 router
@@ -19,7 +22,7 @@ router
   .get(async (req, res) => {
     try {
       const { userId } = req.user;
-      const wishlist = await WishlistItem.findOne({ userId });
+      const wishlist = await Wishlist.findOne({ userId });
 
       if (wishlist) {
         const populatedWishlist = await wishlist
@@ -44,7 +47,7 @@ router
       // console.log(userId);
       const product = req.body;
 
-      let wishlist = await WishlistItem.findOne({ userId });
+      let wishlist = await Wishlist.findOne({ userId });
 
       if (wishlist) {
         wishlist = _.extend(wishlist, {
@@ -56,15 +59,15 @@ router
           .execPopulate();
         res.json({ wishlistItem: populatedWishlist, success: true });
       } else {
-        const wishlistItem = new WishlistItem({
+        const wishlist = new Wishlist({
           userId,
           products: [product],
         });
-        const savedItem = await wishlistItem.save();
+        const savedItem = await wishlist.save();
         const populatedWishlist = await savedItem
           .populate("products")
           .execPopulate();
-        res.json({ wishlistItem: populatedWishlist, success: true });
+        res.json({ wishlist: populatedWishlist, success: true });
       }
 
       // const isPresent = await WishlistItem.exists({
@@ -91,10 +94,9 @@ router.delete("/:productId", async (req, res) => {
   try {
     const { userId } = req.user;
     const { productId } = req.params;
-    let wishlist = await WishlistItem.findOne({ userId });
+    let wishlist = await Wishlist.findOne({ userId });
     wishlist.products.pull({ _id: productId });
-    const updated = await wishlist.save();
-    await updated.populate("products").execPopulate();
+    await wishlist.save();
 
     res.json({ success: true });
   } catch (error) {

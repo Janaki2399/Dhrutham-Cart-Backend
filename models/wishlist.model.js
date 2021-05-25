@@ -9,6 +9,6 @@ const wishlistSchema = new Schema({
   },
   products: [{ type: Schema.Types.ObjectId, ref: "Product" }],
 });
-const WishlistItem = mongoose.model("WishlistItem", wishlistSchema);
+const Wishlist = mongoose.model("Wishlist", wishlistSchema);
 
-module.exports = { WishlistItem };
+module.exports = { Wishlist };
