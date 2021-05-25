@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const jwt = require("jsonwebtoken");
 const { Cart } = require("../models/cart.model");
-const { extend } = require("lodash");
+const _ = require("lodash");
 
 router.use(async (req, res, next) => {
   const token = req.headers.authorization.split(" ")[1];
@@ -24,7 +24,9 @@ router
       const cart = await Cart.findOne({ userId });
 
       if (cart) {
-        const populatedCart = await cart.populate("products").execPopulate();
+        const populatedCart = await cart
+          .populate("list.product")
+          .execPopulate();
         return res.status(200).json({ cart: populatedCart, success: true });
       }
 
@@ -44,22 +46,22 @@ router
       let cart = await Cart.findOne({ userId });
 
       if (cart) {
-        cart = _.extend(cart, {
-          products: _.concat(cart.products, product._id),
-        });
-        const updatedItem = await cart.save();
-        const populatedCart = await updatedItem
-          .populate("products")
-          .execPopulate();
-        res.json({ cart: populatedCart, success: true });
+        // cart = _.extend(cart, {
+        //   products: _.concat(cart.products, product),
+        // });
+        cart.list.push(product);
+        await cart.save();
+        const cartItemId = cart.list[cart.list.length - 1]._id;
+
+        res.json({ cartItemId, success: true });
       } else {
         const cart = new Cart({
           userId,
-          products: [product],
+          list: [product],
         });
         const savedItem = await cart.save();
         const populatedCart = await savedItem
-          .populate("products")
+          .populate("list.product")
           .execPopulate();
         res.json({ cart: populatedCart, success: true });
       }
@@ -84,12 +86,12 @@ router
     }
   });
 
-router.delete("/:productId", async (req, res) => {
+router.delete("/:cartItemId", async (req, res) => {
   try {
     const { userId } = req.user;
-    const { productId } = req.params;
+    const { cartItemId } = req.params;
     let cart = await Cart.findOne({ userId });
-    cart.products.pull({ _id: productId });
+    cart.list.pull({ _id: cartItemId });
     await cart.save();
 
     res.json({ success: true });

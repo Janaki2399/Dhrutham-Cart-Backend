@@ -25,7 +25,7 @@ router
 
       if (wishlist) {
         const populatedWishlist = await wishlist
-          .populate("products")
+          .populate("list.product")
           .execPopulate();
         return res
           .status(200)
@@ -48,25 +48,24 @@ router
       let wishlist = await Wishlist.findOne({ userId });
 
       if (wishlist) {
-        wishlist = _.extend(wishlist, {
-          products: _.concat(wishlist.products, product._id),
-        });
-        const updatedItem = await wishlist.save();
+        wishlist.list.push(product);
+        await wishlist.save();
+        const wishlistItemId = wishlist.list[wishlist.list.length - 1]._id;
 
-        const populatedWishlist = await updatedItem
-          .populate("products")
-          .execPopulate();
-        res.json({ wishlistItem: populatedWishlist, success: true });
+        res.json({ wishlistItemId, success: true });
       } else {
         const wishlist = new Wishlist({
           userId,
-          products: [product],
+          list: [product],
         });
-        const savedItem = await wishlist.save();
-        const populatedWishlist = await savedItem
-          .populate("products")
-          .execPopulate();
-        res.json({ wishlist: populatedWishlist, success: true });
+        await wishlist.save();
+        const wishlistItemId = wishlist.list[wishlist.list.length - 1]._id;
+
+        res.json({ wishlistItemId, success: true });
+        // const populatedWishlist = await savedItem
+        //   .populate("list.product")
+        //   .execPopulate();
+        // res.json({ wishlist: populatedWishlist, success: true });
       }
 
       // const isPresent = await WishlistItem.exists({
@@ -89,12 +88,12 @@ router
     }
   });
 
-router.delete("/:productId", async (req, res) => {
+router.delete("/:wishlistItemId", async (req, res) => {
   try {
     const { userId } = req.user;
-    const { productId } = req.params;
+    const { wishlistItemId } = req.params;
     let wishlist = await Wishlist.findOne({ userId });
-    wishlist.products.pull({ _id: productId });
+    wishlist.list.pull({ _id: wishlistItemId });
     await wishlist.save();
 
     res.json({ success: true });
