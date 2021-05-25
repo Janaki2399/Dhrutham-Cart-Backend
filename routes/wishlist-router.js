@@ -49,23 +49,25 @@ router
 
       if (wishlist) {
         wishlist.list.push(product);
-        await wishlist.save();
-        const wishlistItemId = wishlist.list[wishlist.list.length - 1]._id;
-
-        res.json({ wishlistItemId, success: true });
+        const savedItem = await wishlist.save();
+        // const wishlistItem = wishlist.list[wishlist.list.length - 1];
+        const populatedItem = await savedItem
+          .populate("list.product")
+          .execPopulate();
+        res.json({ wishlst: populatedItem, success: true });
       } else {
         const wishlist = new Wishlist({
           userId,
           list: [product],
         });
-        await wishlist.save();
-        const wishlistItemId = wishlist.list[wishlist.list.length - 1]._id;
+        const savedItem = await wishlist.save();
+        // const wishlistItemId = wishlist.list[wishlist.list.length - 1]._id;
 
-        res.json({ wishlistItemId, success: true });
-        // const populatedWishlist = await savedItem
-        //   .populate("list.product")
-        //   .execPopulate();
-        // res.json({ wishlist: populatedWishlist, success: true });
+        // res.json({ wishlistItemId, success: true });
+        const populatedWishlist = await savedItem
+          .populate("list.product")
+          .execPopulate();
+        res.json({ wishlist: populatedWishlist, success: true });
       }
 
       // const isPresent = await WishlistItem.exists({

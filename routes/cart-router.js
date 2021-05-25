@@ -50,10 +50,11 @@ router
         //   products: _.concat(cart.products, product),
         // });
         cart.list.push(product);
-        await cart.save();
-        const cartItemId = cart.list[cart.list.length - 1]._id;
-
-        res.json({ cartItemId, success: true });
+        const savedItem = await cart.save();
+        const populatedCart = await savedItem
+          .populate("list.product")
+          .execPopulate();
+        res.json({ cart: populatedCart, success: true });
       } else {
         const cart = new Cart({
           userId,
