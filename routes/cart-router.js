@@ -6,10 +6,8 @@ const { extend } = require("lodash");
 
 router.use(async (req, res, next) => {
   const token = req.headers.authorization.split(" ")[1];
-  // console.log(token);
   try {
     const decoded = jwt.verify(token, process.env.secret);
-    console.log(decoded);
     req.user = { userId: decoded.userId };
     next();
   } catch (error) {
@@ -41,7 +39,6 @@ router
   .post(async (req, res) => {
     try {
       const { userId } = req.user;
-      // console.log(userId);
       const product = req.body;
 
       let cart = await Cart.findOne({ userId });

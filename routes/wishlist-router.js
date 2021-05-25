@@ -6,7 +6,6 @@ const { Wishlist } = require("../models/wishlist.model");
 
 router.use(async (req, res, next) => {
   const token = req.headers.authorization.split(" ")[1];
-  // console.log("wishlit :" + token);
   try {
     const decoded = jwt.verify(token, process.env.secret);
     req.user = { userId: decoded.userId };
@@ -44,7 +43,6 @@ router
   .post(async (req, res) => {
     try {
       const { userId } = req.user;
-      // console.log(userId);
       const product = req.body;
 
       let wishlist = await Wishlist.findOne({ userId });
@@ -54,6 +52,7 @@ router
           products: _.concat(wishlist.products, product._id),
         });
         const updatedItem = await wishlist.save();
+
         const populatedWishlist = await updatedItem
           .populate("products")
           .execPopulate();
