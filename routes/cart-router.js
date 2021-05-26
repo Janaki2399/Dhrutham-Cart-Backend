@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const jwt = require("jsonwebtoken");
 const { Cart } = require("../models/cart.model");
-const _ = require("lodash");
+const { _, extend } = require("lodash");
 
 router.use(async (req, res, next) => {
   const token = req.headers.authorization.split(" ")[1];
@@ -87,12 +87,17 @@ router
     }
   });
 
-router.delete("/:cartItemId", async (req, res) => {
+router.delete("/:productId", async (req, res) => {
   try {
     const { userId } = req.user;
-    const { cartItemId } = req.params;
+    const { productId } = req.params;
     let cart = await Cart.findOne({ userId });
-    cart.list.pull({ _id: cartItemId });
+    // cart.list.pull({ _id: cartItemId });
+    cart = _.extend(cart, {
+      list: _.filter(cart.list, (item) => {
+        return item.product.toString() !== productId;
+      }),
+    });
     await cart.save();
 
     res.json({ success: true });
@@ -100,24 +105,33 @@ router.delete("/:cartItemId", async (req, res) => {
     res.status(500).json({ success: false, errorMessage: error.message });
   }
 });
-// router.route("/:productId").post(async (req, res) => {
-//   const { userId } = req.user;
-//   const { productId } = req.params;
-//   const updateProperty = req.body;
-//   let cart = await Cart.findOne({ userId });
-//   const updatedCartItem = extend(cart, updateProperty);
-//   await updatedCartItem.save();
-//   res.status(200).json({ success: true });
-//   // try {
-//   //   const cartId = req.params.cartId;
-//   //   const cartItem = await CartItem.findById(cartId);
-//   //   const updateProperty = req.body;
-//   //   const updatedCartItem = extend(cartItem, updateProperty);
-//   //   const newCartItem = await updatedCartItem.save();
-//   //   res.status(200).json({ newCartItem, success: true });
-//   // } catch (error) {
-//   //   res.status(500).json({ success: false, errorMessage: error.message });
-//   // }
-// });
+router.route("/:productId").post(async (req, res) => {
+  const { userId } = req.user;
+  const { productId } = req.params;
+  const updateProperty = req.body;
+  let cart = await Cart.findOne({ userId });
+  const updatedCartItem = _.extend(cart, {
+    list: _.map(cart.list, (item) => {
+      if (item.product.toString() === productId) {
+        return extend(item, updateProperty);
+      } else {
+        return item;
+      }
+    }),
+  });
+
+  await updatedCartItem.save();
+  res.status(200).json({ success: true });
+  // try {
+  //   const cartId = req.params.cartId;
+  //   const cartItem = await CartItem.findById(cartId);
+  //   const updateProperty = req.body;
+  //   const updatedCartItem = extend(cartItem, updateProperty);
+  //   const newCartItem = await updatedCartItem.save();
+  //   res.status(200).json({ newCartItem, success: true });
+  // } catch (error) {
+  //   res.status(500).json({ success: false, errorMessage: error.message });
+  // }
+});
 
 module.exports = router;
