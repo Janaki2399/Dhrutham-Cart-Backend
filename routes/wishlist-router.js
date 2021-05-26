@@ -54,7 +54,7 @@ router
         const populatedItem = await savedItem
           .populate("list.product")
           .execPopulate();
-        res.json({ wishlst: populatedItem, success: true });
+        res.json({ wishlist: populatedItem, success: true });
       } else {
         const wishlist = new Wishlist({
           userId,
