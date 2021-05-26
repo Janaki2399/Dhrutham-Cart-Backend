@@ -49,8 +49,14 @@ router
 
       if (wishlist) {
         wishlist.list.push(product);
-        const savedItem = await wishlist.save();
         // const wishlistItem = wishlist.list[wishlist.list.length - 1];
+        const savedItem = await wishlist.save();
+
+        // wishlist.list.push(product);
+        // wishlist = await wishlist.save();
+        // // wishlist=await wishlist.populate({path:"list",})
+        // const wishlistItem = wishlist.list[wishlist.list.length - 1];
+
         const populatedItem = await savedItem
           .populate("list.product")
           .execPopulate();
@@ -90,12 +96,18 @@ router
     }
   });
 
-router.delete("/:wishlistItemId", async (req, res) => {
+router.delete("/:productId", async (req, res) => {
   try {
     const { userId } = req.user;
-    const { wishlistItemId } = req.params;
+    const { productId } = req.params;
     let wishlist = await Wishlist.findOne({ userId });
-    wishlist.list.pull({ _id: wishlistItemId });
+
+    // wishlist.list.pull({ _id: productId });
+    wishlist = _.extend(wishlist, {
+      list: _.filter(wishlist.list, (item) => {
+        return item.product.toString() !== productId;
+      }),
+    });
     await wishlist.save();
 
     res.json({ success: true });
