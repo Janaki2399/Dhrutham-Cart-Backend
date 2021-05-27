@@ -10,7 +10,14 @@ router.post("/signup", async (req, res) => {
   if (!(body.firstName && body.lastName && body.email && body.password)) {
     return res
       .status(401)
-      .json({ success: false, errorMessage: "Data is not in correct format" });
+      .json({ success: false, errorMessage: "Enter all details" });
+  }
+  const userExists = await User.findOne({ email: body.email });
+  if (userExists) {
+    return res.status(409).json({
+      success: false,
+      errorMessage: "Account already exists.Please Login to continue",
+    });
   }
   const user = new User(body);
   const salt = await bcrypt.genSalt(10);
