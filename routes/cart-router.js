@@ -46,15 +46,23 @@ router
       let cart = await Cart.findOne({ userId });
 
       if (cart) {
-        // cart = _.extend(cart, {
-        //   products: _.concat(cart.products, product),
-        // });
+        const isPresent = _.some(cart.list, (item) => {
+          return item.product.toString() === product.product._id;
+        });
+  
+        if (isPresent) {
+        return res
+          .status(409)
+          .json({ success: false, message: "item already exists" });
+        }
+
         cart.list.push(product);
         const savedItem = await cart.save();
         const populatedCart = await savedItem
           .populate("list.product")
           .execPopulate();
         res.json({ cart: populatedCart, success: true });
+        
       } else {
         const cart = new Cart({
           userId,
@@ -67,18 +75,6 @@ router
         res.json({ cart: populatedCart, success: true });
       }
 
-      // const isPresent = await WishlistItem.exists({
-      //   product: product.product._id,
-      // });
-      // if (isPresent) {
-      //   return res
-      //     .status(409)
-      //     .json({ success: false, message: "item already exists" });
-      // }
-
-      // const wishlistItem = new WishlistItem(product);
-      // const insertedItem = await wishlistItem.save();
-      // const populatedItem = await insertedItem.populate("product").execPopulate();
     } catch (error) {
       res.status(500).json({
         success: false,
@@ -91,8 +87,8 @@ router.delete("/:productId", async (req, res) => {
   try {
     const { userId } = req.user;
     const { productId } = req.params;
+
     let cart = await Cart.findOne({ userId });
-    // cart.list.pull({ _id: cartItemId });
     cart = _.extend(cart, {
       list: _.filter(cart.list, (item) => {
         return item.product.toString() !== productId;
@@ -101,15 +97,19 @@ router.delete("/:productId", async (req, res) => {
     await cart.save();
 
     res.json({ success: true });
+
   } catch (error) {
     res.status(500).json({ success: false, errorMessage: error.message });
   }
 });
 router.route("/:productId").post(async (req, res) => {
+  try{
   const { userId } = req.user;
   const { productId } = req.params;
   const updateProperty = req.body;
+
   let cart = await Cart.findOne({ userId });
+
   const updatedCartItem = _.extend(cart, {
     list: _.map(cart.list, (item) => {
       if (item.product.toString() === productId) {
@@ -122,16 +122,10 @@ router.route("/:productId").post(async (req, res) => {
 
   await updatedCartItem.save();
   res.status(200).json({ success: true });
-  // try {
-  //   const cartId = req.params.cartId;
-  //   const cartItem = await CartItem.findById(cartId);
-  //   const updateProperty = req.body;
-  //   const updatedCartItem = extend(cartItem, updateProperty);
-  //   const newCartItem = await updatedCartItem.save();
-  //   res.status(200).json({ newCartItem, success: true });
-  // } catch (error) {
-  //   res.status(500).json({ success: false, errorMessage: error.message });
-  // }
+  }
+  catch(error){
+  res.status(500).json({ success: false, errorMessage: error.message });
+  }
 });
 
 module.exports = router;

@@ -44,51 +44,42 @@ router
     try {
       const { userId } = req.user;
       const product = req.body;
-
+     
       let wishlist = await Wishlist.findOne({ userId });
 
       if (wishlist) {
+        const isPresent = _.some(wishlist.list, (item) => {
+          return item.product.toString() === product.product._id;
+        });
+  
+        if (isPresent) {
+        return res
+          .status(409)
+          .json({ success: false, message: "item already exists" });
+        }
+
         wishlist.list.push(product);
-        // const wishlistItem = wishlist.list[wishlist.list.length - 1];
         const savedItem = await wishlist.save();
-
-        // wishlist.list.push(product);
-        // wishlist = await wishlist.save();
-        // // wishlist=await wishlist.populate({path:"list",})
-        // const wishlistItem = wishlist.list[wishlist.list.length - 1];
-
         const populatedItem = await savedItem
           .populate("list.product")
           .execPopulate();
+
         res.json({ wishlist: populatedItem, success: true });
+
       } else {
         const wishlist = new Wishlist({
           userId,
           list: [product],
         });
         const savedItem = await wishlist.save();
-        // const wishlistItemId = wishlist.list[wishlist.list.length - 1]._id;
-
-        // res.json({ wishlistItemId, success: true });
+      
         const populatedWishlist = await savedItem
           .populate("list.product")
           .execPopulate();
         res.json({ wishlist: populatedWishlist, success: true });
       }
-
-      // const isPresent = await WishlistItem.exists({
-      //   product: product.product._id,
-      // });
-      // if (isPresent) {
-      //   return res
-      //     .status(409)
-      //     .json({ success: false, message: "item already exists" });
-      // }
-
-      // const wishlistItem = new WishlistItem(product);
-      // const insertedItem = await wishlistItem.save();
-      // const populatedItem = await insertedItem.populate("product").execPopulate();
     } catch (error) {
+      console.log(error);
       res.status(500).json({
         success: false,
         errorMessage: error.message,
@@ -102,7 +93,6 @@ router.delete("/:productId", async (req, res) => {
     const { productId } = req.params;
     let wishlist = await Wishlist.findOne({ userId });
 
-    // wishlist.list.pull({ _id: productId });
     wishlist = _.extend(wishlist, {
       list: _.filter(wishlist.list, (item) => {
         return item.product.toString() !== productId;
